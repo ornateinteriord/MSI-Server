@@ -1,12 +1,18 @@
-const { signup, login, getSponsorDetails, recoverPassword, resetPassword } = require("../controllers/Auth/AuthController");
+const express = require("express");
+const router = express.Router();
+const {
+    login,
+} = require("../controllers/Auth/AuthController");
 
-const router = require("express").Router();
+// ====================== Auth Routes ======================
 
-router.post("/signup", signup);
-router.get("/get-sponsor/:ref", getSponsorDetails);
-router.post("/recover-password",recoverPassword)
-router.post("/reset-password",resetPassword)
+// Login route - ACTIVE
 router.post("/login", login);
 
-module.exports = router;
+// All other routes - COMMENTED OUT
+// router.post("/signup", signup);
+// router.get("/sponsor/:ref", getSponsorDetails);
+// router.post("/recover-password", recoverPassword);
+// router.post("/reset-password", resetPassword);
 
+module.exports = router;

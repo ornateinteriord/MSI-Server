@@ -7,13 +7,7 @@ require("./models/db"); // Your Mongo DB connection file
 
 // ====================== Routes ======================
 const AuthRoutes = require("./routes/AuthRoutes");
-const UserRoutes = require("./routes/UserRoutes");
 const AdminRoutes = require("./routes/AdminRoute");
-const PaymentRoutes = require("./routes/PaymentRoutes");
-const KYCRoutes = require("./routes/KYCRoutes");
-
-// 🔐 CASHFREE WEBHOOK CONTROLLER
-const { handleWebhook } = require("./controllers/Payments/CashfreeController");
 
 const app = express();
 
@@ -59,10 +53,6 @@ app.use("/webhook/cashfree", express.raw({ type: "*/*" }));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
-// ======================================================
-// 💳 CASHFREE WEBHOOK ROUTE (must come AFTER raw body)
-// ======================================================
-app.post("/webhook/cashfree", handleWebhook);
 
 // ======================================================
 //    📷 ImageKit Configuration (Optional but Secure)
@@ -95,15 +85,12 @@ app.get("/image-kit-auth", (_req, res) => {
 //        📌 API ROUTES
 // ======================================================
 app.use("/auth", AuthRoutes);
-app.use("/user", UserRoutes);
 app.use("/admin", AdminRoutes);
-app.use("/payments", PaymentRoutes);
-app.use("/kyc", KYCRoutes);
 
 // ======================================================
 //        🏠 HOME
 // ======================================================
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send(`🚀 ${process.env.PROJECT_NAME || "MSCS Server"} Running Securely`);
 });
 
@@ -112,5 +99,5 @@ app.get("/", (req, res) => {
 // ======================================================
 const PORT = process.env.PORT || 5051;
 app.listen(PORT, () => {
-  console.log(`🌍 Server running on port ${PORT}`);
+  console.log(`🌍 Server running on port http://localhost:${PORT}`);
 });
