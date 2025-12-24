@@ -1,6 +1,7 @@
 const { createMember, getMembers, updateMember, getMemberById } = require("../controllers/Admin/Member/index");
 const { createAgent, getAgents, updateAgent, getAgentById } = require("../controllers/Admin/Agent/index");
 const { createInterest, getInterests, updateInterest, getInterestById } = require("../controllers/Admin/Interest/index");
+const { getInterestsByAccountGroup, createAccount, getAccounts, getAccountById, updateAccount, getAccountBooks, getAccountGroups } = require("../controllers/Admin/Account/index");
 const Authenticated = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorizeRole");
 
@@ -23,5 +24,14 @@ router.post('/create-interest', Authenticated, authorizeRoles("ADMIN"), createIn
 router.get('/get-interests', Authenticated, authorizeRoles("ADMIN"), getInterests)
 router.put('/update-interest/:interestId', Authenticated, authorizeRoles("ADMIN"), updateInterest)
 router.get('/get-interest/:interestId', Authenticated, authorizeRoles("ADMIN"), getInterestById)
+
+// Account routes
+router.get('/get-interests-by-account-group/:account_group_id', Authenticated, authorizeRoles("ADMIN"), getInterestsByAccountGroup)
+router.post('/create-account', Authenticated, authorizeRoles("ADMIN"), createAccount)
+router.get('/get-accounts', Authenticated, authorizeRoles("ADMIN"), getAccounts)
+router.get('/get-account/:accountId', Authenticated, authorizeRoles("ADMIN"), getAccountById)
+router.put('/update-account/:accountId', Authenticated, authorizeRoles("ADMIN"), updateAccount)
+router.get('/get-account-books', Authenticated, authorizeRoles("ADMIN"), getAccountBooks)
+router.get('/get-account-groups', Authenticated, authorizeRoles("ADMIN"), getAccountGroups)
 
 module.exports = router;

@@ -12,7 +12,7 @@ const memberSchema = mongoose.Schema(
     },
     date_of_joining: {
       type: Date,
-      default: null,
+      default: Date.now,
     },
     receipt_no: {
       type: String,

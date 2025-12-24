@@ -12,7 +12,7 @@ const accountsSchema = mongoose.Schema(
     },
     date_of_opening: {
       type: Date,
-      default: null,
+      default: Date.now,
     },
     member_id: {
       type: String,
