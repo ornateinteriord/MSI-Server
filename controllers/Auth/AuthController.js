@@ -1,5 +1,5 @@
-const AdminModel = require("../../models/Admin/Admin");
-const MemberModel = require("../../models/Users/Member");
+const MemberModel = require("../../models/member.model");
+const UserModel = require("../../models/user.model");
 const jwt = require("jsonwebtoken");
 const {
   sendMail,
@@ -8,12 +8,12 @@ const { generateOTP, storeOTP, verifyOTP } = require("../../utils/OtpService");
 const { generateMSCSEmail } = require("../../utils/generateMSCSEmail");
 
 const recoverySubject = "MSI - Password Recovery";
-const resetPasswordSubject =  "MSI - OTP Verification";
+const resetPasswordSubject = "MSI - OTP Verification";
 
 const generateUniqueMemberId = async () => {
   while (true) {
     const memberId = `MSI${Math.floor(100000 + Math.random() * 900000)}`;
-    if (!(await MemberModel.exists({ Member_id: memberId }))) {
+    if (!(await MemberModel.exists({ member_id: memberId }))) {
       return memberId;
     }
   }
@@ -21,8 +21,8 @@ const generateUniqueMemberId = async () => {
 
 const signup = async (req, res) => {
   try {
-    const { email, password, Name, ...otherDetails } = req.body;
-    // const existingUser = await MemberModel.findOne({ email });
+    const { emailid, password, name, ...otherDetails } = req.body;
+    // const existingUser = await MemberModel.findOne({ emailid });
     // if (existingUser) {
     //   return res.status(400).json({ success: false, message: "Email already in use" });
     // }
@@ -30,35 +30,30 @@ const signup = async (req, res) => {
     const memberId = await generateUniqueMemberId();
 
     const newMember = new MemberModel({
-      Member_id: memberId,
-      email,
+      member_id: memberId,
+      emailid,
       password,
-      Name,
-      
+      name,
       ...otherDetails,
     });
     await newMember.save();
 
     try {
+      const { welcomeMessage, welcomeSubject } = generateMSCSEmail(memberId, password, name);
+      const textContent = `Dear ${name}, Your account registration with MSI has been completed. Member ID: ${memberId}, Password: ${password}. Your account is under verification process.`;
 
-      const { welcomeMessage, welcomeSubject } = generateMSCSEmail(memberId, password, Name);
-      
-      const textContent = `Dear ${Name}, Your account registration with MSI has been completed. Member ID: ${memberId}, Password: ${password}. Your account is under verification process.`;
-      
-
-      await sendMail(email, welcomeSubject, welcomeMessage, textContent);
-
+      await sendMail(emailid, welcomeSubject, welcomeMessage, textContent);
     } catch (emailError) {
-
+      // Email sending failed but continue
     }
 
     res.status(201).json({
       success: true,
       message: "Signup successful. Credentials sent to email.",
       user: {
-        Member_id: newMember.Member_id,
-        email: newMember.email,
-        Name: newMember.Name
+        member_id: newMember.member_id,
+        emailid: newMember.emailid,
+        name: newMember.name
       },
     });
 
@@ -71,16 +66,16 @@ const signup = async (req, res) => {
 const getSponsorDetails = async (req, res) => {
   try {
     const { ref } = req.params;
-    const sponsor = await MemberModel.findOne({ Member_id: ref });
+    const sponsor = await MemberModel.findOne({ member_id: ref });
     if (!sponsor) {
       return res
-      .status(404)
+        .status(404)
         .json({ success: false, message: "Invalid Sponsor Code" });
     }
     res.json({
       success: true,
-      Member_id: sponsor.Member_id,
-      name: sponsor.Name,
+      member_id: sponsor.member_id,
+      name: sponsor.name,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -89,16 +84,16 @@ const getSponsorDetails = async (req, res) => {
 
 const recoverPassword = async (req, res) => {
   try {
-    const { email } = req.body;
-    const user = await MemberModel.findOne({ email });
+    const { emailid } = req.body;
+    const user = await MemberModel.findOne({ emailid });
     if (!user) {
       return res
-      .status(404)
-      .json({ success: false, message: "Email not registered" });
+        .status(404)
+        .json({ success: false, message: "Email not registered" });
     }
     const recoveryDescription = `Dear Member,\n\nYou requested a password recovery. Here is your password:\n ${user.password}\n\nPlease keep this information secure.\n\nBest regards,\MSI Team`;
 
-    await sendMail(user.email, recoverySubject, recoveryDescription);
+    await sendMail(user.emailid, recoverySubject, recoveryDescription);
     res.json({ success: true, message: "Password sent to your email" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -107,8 +102,8 @@ const recoverPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   try {
-    const { email, password, otp } = req.body;
-    const user = await MemberModel.findOne({ email });
+    const { emailid, password, otp } = req.body;
+    const user = await MemberModel.findOne({ emailid });
     if (!user) {
       return res
         .status(404)
@@ -116,7 +111,7 @@ const resetPassword = async (req, res) => {
     }
 
     if (otp && !password) {
-      if (!verifyOTP(email, otp)) {
+      if (!verifyOTP(emailid, otp)) {
         return res
           .status(400)
           .json({ success: false, message: "Invalid OTP or expired" });
@@ -124,7 +119,7 @@ const resetPassword = async (req, res) => {
       return res.json({ success: true, message: "OTP verified. Now set a new password." });
     }
     if (password) {
-    
+
       user.password = password;
       await user.save();
 
@@ -135,8 +130,8 @@ const resetPassword = async (req, res) => {
     }
     const newOtp = generateOTP();
     const resetPasswordDescription = `Dear Member,\n\nYour OTP for password reset is: ${newOtp}\n\nPlease use this OTP to proceed with resetting your password.\n\nPlease keep don't share with anyone.\n\nBest regards,\nMSI Team`;
-    storeOTP(email, newOtp);
-    await sendMail(email, resetPasswordSubject , resetPasswordDescription);
+    storeOTP(emailid, newOtp);
+    await sendMail(emailid, resetPasswordSubject, resetPasswordDescription);
     return res.json({ success: true, message: "OTP sent to your email" });
   } catch (error) {
     console.error("Error in resetPassword:", error);
@@ -147,51 +142,49 @@ const resetPassword = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await MemberModel.findOne({ Member_id: username });
-    const admin = await AdminModel.findOne({ username });
-    const foundUser = user || admin;
-    if (!foundUser) {
+
+    // Find user by user_name
+    const user = await UserModel.findOne({ user_name: username });
+
+    if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "User or Admin not found" });
+        .json({ success: false, message: "User not found" });
     }
 
-    const userRole = user instanceof MemberModel ? "USER" : "ADMIN";
-
-    const isPasswordValid =
-      password === (foundUser.PASSWORD || foundUser.password);
+    // Verify password
+    const isPasswordValid = password === user.password;
     if (!isPasswordValid) {
       return res
         .status(401)
         .json({ success: false, message: "Incorrect username or password" });
     }
 
+    // Generate JWT token
     const token = jwt.sign(
       {
-        id: foundUser._id,
-        role: userRole,
-        memberId: foundUser?.Member_id ?? null,
+        id: user._id,
+        role: user.user_role,
+        userId: user.user_id,
       },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
+
     return res.status(200).json({
-       
       success: true,
-      role: userRole,
-      user: foundUser,
+      role: user.user_role,
+      user: user,
       token,
-      message: `${
-        userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase()
-      } login successful`,
-      
+      message: `${user.user_role.charAt(0).toUpperCase() + user.user_role.slice(1).toLowerCase()
+        } login successful`,
     });
-   
+
   } catch (error) {
     console.error("Login Error:", error);
     return res
       .status(500)
-      .json({ success: false, message: error });
+      .json({ success: false, message: error.message });
   }
 };
 

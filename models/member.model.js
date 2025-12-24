@@ -79,6 +79,18 @@ const memberSchema = mongoose.Schema(
       type: String,
       default: null,
     },
+    introducer_name: {
+      type: String,
+      default: null,
+    },
+    member_image: {
+      type: String,
+      default: null,
+    },
+    member_signature: {
+      type: String,
+      default: null,
+    },
     entered_by: {
       type: String,
       default: null,
@@ -86,6 +98,10 @@ const memberSchema = mongoose.Schema(
     status: {
       type: String,
       default: "active",
+    },
+    role: {
+      type: String,
+      default: "USER",
     },
   },
   { timestamps: true, collection: "member_tbl" }
