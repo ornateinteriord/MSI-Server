@@ -1,5 +1,6 @@
 const { createMember, getMembers, updateMember, getMemberById } = require("../controllers/Admin/Member/index");
 const { createAgent, getAgents, updateAgent, getAgentById } = require("../controllers/Admin/Agent/index");
+const { createInterest, getInterests, updateInterest, getInterestById } = require("../controllers/Admin/Interest/index");
 const Authenticated = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorizeRole");
 
@@ -16,5 +17,11 @@ router.post('/create-agent', Authenticated, authorizeRoles("ADMIN"), createAgent
 router.get('/get-agents', Authenticated, authorizeRoles("ADMIN"), getAgents)
 router.put('/update-agent/:agentId', Authenticated, authorizeRoles("ADMIN"), updateAgent)
 router.get('/get-agent/:agentId', Authenticated, authorizeRoles("ADMIN"), getAgentById)
+
+// Interest routes
+router.post('/create-interest', Authenticated, authorizeRoles("ADMIN"), createInterest)
+router.get('/get-interests', Authenticated, authorizeRoles("ADMIN"), getInterests)
+router.put('/update-interest/:interestId', Authenticated, authorizeRoles("ADMIN"), updateInterest)
+router.get('/get-interest/:interestId', Authenticated, authorizeRoles("ADMIN"), getInterestById)
 
 module.exports = router;
