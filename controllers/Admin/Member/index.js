@@ -102,9 +102,9 @@ const createMember = async (req, res) => {
 
             await UserModel.create({
                 user_id: newUserId,
-                user_name: newMemberId, 
+                user_name: newMemberId,
                 reference_id: newMemberId,
-                password: contactno, 
+                password: contactno,
                 user_role: "USER",
                 branch_code: branch_id,
                 user_status: "active"
@@ -223,7 +223,6 @@ const updateMember = async (req, res) => {
             data: updatedMember
         });
     } catch (error) {
-        console.error("Error updating member:", error);
         res.status(500).json({
             success: false,
             message: "Failed to update member",
@@ -236,8 +235,9 @@ const updateMember = async (req, res) => {
 const getMemberById = async (req, res) => {
     try {
         const { memberId } = req.params;
+        const allMembers = await MemberModel.find({});
+        const member = allMembers.find(m => m.member_id === memberId);
 
-        const member = await MemberModel.findOne({ member_id: memberId });
         if (!member) {
             return res.status(404).json({
                 success: false,
@@ -251,7 +251,6 @@ const getMemberById = async (req, res) => {
             data: member
         });
     } catch (error) {
-        console.error("Error fetching member:", error);
         res.status(500).json({
             success: false,
             message: "Failed to fetch member",
