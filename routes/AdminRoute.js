@@ -1,12 +1,20 @@
 const { createMember, getMembers, updateMember, getMemberById } = require("../controllers/Admin/Member/index");
+const { createAgent, getAgents, updateAgent, getAgentById } = require("../controllers/Admin/Agent/index");
 const Authenticated = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorizeRole");
 
 const router = require("express").Router();
 
-// manipal society routes
+// Member routes
 router.post('/create-member', Authenticated, authorizeRoles("ADMIN"), createMember)
-router.get('/get-members', Authenticated, getMembers)
-router.put('/update-member/:memberId', Authenticated, updateMember)
-router.get('/get-member/:memberId', Authenticated, getMemberById)
+router.get('/get-members', Authenticated, authorizeRoles("ADMIN"), getMembers)
+router.put('/update-member/:memberId', Authenticated, authorizeRoles("ADMIN"), updateMember)
+router.get('/get-member/:memberId', Authenticated, authorizeRoles("ADMIN"), getMemberById)
+
+// Agent routes
+router.post('/create-agent', Authenticated, authorizeRoles("ADMIN"), createAgent)
+router.get('/get-agents', Authenticated, authorizeRoles("ADMIN"), getAgents)
+router.put('/update-agent/:agentId', Authenticated, authorizeRoles("ADMIN"), updateAgent)
+router.get('/get-agent/:agentId', Authenticated, authorizeRoles("ADMIN"), getAgentById)
+
 module.exports = router;

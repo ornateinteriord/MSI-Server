@@ -12,7 +12,7 @@ const agentSchema = mongoose.Schema(
     },
     date_of_joining: {
       type: Date,
-      default: null,
+      default: Date.now,
     },
     name: {
       type: String,
