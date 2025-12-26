@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { getAgentById } = require("../controllers/Admin/Agent");
 const Authenticated = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorizeRole");
+const { getMemberById } = require("../controllers/Admin/Member");
 
 
-router.get('/get-agent/:agentId', Authenticated, authorizeRoles(["AGENT"]), getAgentById)
+router.get('/get-member/:memberId', Authenticated, authorizeRoles(["USER"]), getMemberById)
 
 module.exports = router;
