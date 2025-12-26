@@ -11,6 +11,9 @@ const AdminRoutes = require("./routes/AdminRoute");
 const AgentRoutes = require("./routes/AgentRoute");
 const MemberRoutes = require("./routes/MemberRoute");
 const TransactionRoutes = require("./routes/TransactionRoute");
+const ReceiptsRoutes = require("./routes/ReceiptsRoute");
+const PaymentsRoutes = require("./routes/PaymentsRoute");
+const CashTransactionRoutes = require("./routes/CashTransactionRoute");
 
 const app = express();
 
@@ -92,6 +95,9 @@ app.use("/admin", AdminRoutes);
 app.use("/agent", AgentRoutes);
 app.use("/member", MemberRoutes);
 app.use("/transaction", TransactionRoutes);
+app.use("/banking", ReceiptsRoutes);
+app.use("/banking", PaymentsRoutes);
+app.use("/banking/cash-transactions", CashTransactionRoutes);
 // ======================================================
 //        🏠 HOME
 // ======================================================

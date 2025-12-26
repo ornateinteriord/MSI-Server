@@ -8,13 +8,13 @@ const { getMyAccounts, updateMyProfile, getMemberBasicInfo, getMemberAccountsPub
 router.get('/get-member/:memberId', Authenticated, authorizeRoles(["USER"]), getMemberById)
 
 // Member dashboard routes  
-router.get('/get-my-accounts', Authenticated, getMyAccounts);
+router.get('/get-my-accounts', Authenticated, authorizeRoles(["USER"]), getMyAccounts);
 
 // Update member profile
-router.put('/update-profile/:memberId', Authenticated, updateMyProfile);
+router.put('/update-profile/:memberId', Authenticated, authorizeRoles(["USER"]), updateMyProfile);
 
 // Transfer-related routes (for recipient lookup)
-router.get('/basic-info/:memberId', Authenticated, getMemberBasicInfo);
-router.get('/accounts/:memberId', Authenticated, getMemberAccountsPublic);
+router.get('/basic-info/:memberId', Authenticated, authorizeRoles(["USER"]), getMemberBasicInfo);
+router.get('/accounts/:memberId', Authenticated, authorizeRoles(["USER"]), getMemberAccountsPublic);
 
 module.exports = router;
