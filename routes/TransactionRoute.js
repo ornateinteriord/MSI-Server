@@ -4,9 +4,9 @@ const { getTransactions, addTransaction, getAllTransactions, createPaymentOrder,
 const Authenticated = require("../middlewares/auth");
 
 // Unified Transaction Routes
-router.post('/add', addTransaction); // /transaction/add
-router.get('/member/:id', getTransactions); // /transaction/member/:id
-router.get('/all', getAllTransactions); // /transaction/all (Admin)
+router.post('/add', Authenticated, addTransaction); // /transaction/add
+router.get('/member/:id', Authenticated, getTransactions); // /transaction/member/:id
+router.get('/all', Authenticated, getAllTransactions); // /transaction/all (Admin)
 
 // Money Transfer
 router.post('/transfer-money', Authenticated, transferMoney); // /transaction/transfer-money
