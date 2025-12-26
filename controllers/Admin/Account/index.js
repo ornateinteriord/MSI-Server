@@ -77,6 +77,20 @@ const createAccount = async (req, res) => {
             });
         }
 
+        // Check if member already has an account of this type
+        const existingAccount = await AccountsModel.findOne({
+            member_id: member_id,
+            account_type: account_type,
+            status: { $nin: ["closed", "inactive"] } // Only check for active/pending accounts
+        });
+
+        if (existingAccount) {
+            return res.status(409).json({
+                success: false,
+                message: `Member already has an active ${accountGroup.account_group_name} account (${existingAccount.account_no || existingAccount.account_id}). Cannot create duplicate account type.`
+            });
+        }
+
         // Auto-increment account_id with ACC prefix
         const lastAccount = await AccountsModel.findOne()
             .sort({ account_id: -1 })

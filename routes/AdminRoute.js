@@ -2,6 +2,7 @@ const { createMember, getMembers, updateMember, getMemberById } = require("../co
 const { createAgent, getAgents, updateAgent, getAgentById } = require("../controllers/Admin/Agent/index");
 const { createInterest, getInterests, updateInterest, getInterestById } = require("../controllers/Admin/Interest/index");
 const { getInterestsByAccountGroup, createAccount, getAccounts, getAccountById, updateAccount, getAccountBooks, getAccountGroups } = require("../controllers/Admin/Account/index");
+const { getDashboardCounts, getRecentData } = require("../controllers/Admin/Dashboard/index");
 const Authenticated = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorizeRole");
 
@@ -33,5 +34,9 @@ router.get('/get-account/:accountId', Authenticated, authorizeRoles(["ADMIN"]), 
 router.put('/update-account/:accountId', Authenticated, authorizeRoles(["ADMIN"]), updateAccount)
 router.get('/get-account-books', Authenticated, authorizeRoles(["ADMIN"]), getAccountBooks)
 router.get('/get-account-groups', Authenticated, authorizeRoles(["ADMIN"]), getAccountGroups)
+
+// Dashboard routes
+router.get('/get-dashboard-counts', Authenticated, authorizeRoles(["ADMIN"]), getDashboardCounts)
+router.get('/get-recent-data', Authenticated, authorizeRoles(["ADMIN"]), getRecentData)
 
 module.exports = router;
