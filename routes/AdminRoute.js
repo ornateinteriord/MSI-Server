@@ -34,4 +34,12 @@ router.put('/update-account/:accountId', Authenticated, authorizeRoles("ADMIN"),
 router.get('/get-account-books', Authenticated, authorizeRoles("ADMIN"), getAccountBooks)
 router.get('/get-account-groups', Authenticated, authorizeRoles("ADMIN"), getAccountGroups)
 
+
+// ====================== Transaction Routes ======================
+const { getAdminTransactions, addAdminTransaction } = require("../controllers/Transaction/AdminTransaction");
+
+router.post('/transaction/add', addAdminTransaction);
+router.get('/transaction/all', getAdminTransactions);
+
+
 module.exports = router;

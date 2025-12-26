@@ -9,6 +9,7 @@ require("./models/db"); // Your Mongo DB connection file
 const AuthRoutes = require("./routes/AuthRoutes");
 const AdminRoutes = require("./routes/AdminRoute");
 const AgentRoutes = require("./routes/AgentRoute");
+const UserRoutes = require("./routes/UserRoute");
 
 const app = express();
 
@@ -88,6 +89,7 @@ app.get("/image-kit-auth", (_req, res) => {
 app.use("/auth", AuthRoutes);
 app.use("/admin", AdminRoutes);
 app.use("/agent", AgentRoutes);
+app.use("/user", UserRoutes);
 // ======================================================
 //        🏠 HOME
 // ======================================================
