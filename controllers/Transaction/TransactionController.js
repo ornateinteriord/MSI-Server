@@ -269,3 +269,211 @@ exports.checkPaymentStatus = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 }
+
+// ==========================================
+// Money Transfer Between Accounts
+// ==========================================
+
+// Transfer money between two accounts
+exports.transferMoney = async (req, res) => {
+    const AccountsModel = require("../../models/accounts.model");
+    const MemberModel = require("../../models/member.model");
+
+    try {
+        const { from, to, amount } = req.body;
+
+        // Validate input
+        if (!from || !to || !amount) {
+            return res.status(400).json({
+                success: false,
+                message: "From account, to account, and amount are required"
+            });
+        }
+
+        if (amount <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Transfer amount must be greater than zero"
+            });
+        }
+
+        // Validate sender member exists and is active
+        const allMembers = await MemberModel.find({});
+        const senderMember = allMembers.find(m => m.member_id === from.member_id || m.member_id === parseInt(from.member_id));
+        if (!senderMember) {
+            return res.status(404).json({
+                success: false,
+                message: "Sender member not found"
+            });
+        }
+
+        if (senderMember.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Sender member account is not active"
+            });
+        }
+
+        // Validate receiver member exists and is active
+        const receiverMember = allMembers.find(m => m.member_id === to.member_id || m.member_id === parseInt(to.member_id));
+        if (!receiverMember) {
+            return res.status(404).json({
+                success: false,
+                message: "Receiver member not found"
+            });
+        }
+
+        if (receiverMember.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Receiver member account is not active"
+            });
+        }
+
+        // Find sender account (handle type mismatches)
+        const allAccounts = await AccountsModel.find({});
+        const senderAccount = allAccounts.find(acc =>
+            (acc.account_id === from.account_id || acc.account_id === parseInt(from.account_id)) &&
+            (acc.member_id === from.member_id || acc.member_id === parseInt(from.member_id)) &&
+            (acc.account_no == from.account_no) &&
+            (acc.account_type === from.account_type)
+        );
+
+        if (!senderAccount) {
+            return res.status(404).json({
+                success: false,
+                message: "Sender account not found"
+            });
+        }
+
+        // Check if sender account is active
+        if (senderAccount.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Sender account is not active"
+            });
+        }
+
+        // Find receiver account (handle type mismatches)
+        const receiverAccount = allAccounts.find(acc =>
+            (acc.account_id === to.account_id || acc.account_id === parseInt(to.account_id)) &&
+            (acc.member_id === to.member_id || acc.member_id === parseInt(to.member_id)) &&
+            (acc.account_no == to.account_no) &&
+            (acc.account_type === to.account_type)
+        );
+
+        if (!receiverAccount) {
+            return res.status(404).json({
+                success: false,
+                message: "Receiver account not found"
+            });
+        }
+
+        // Check if receiver account is active
+        if (receiverAccount.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Receiver account is not active"
+            });
+        }
+
+        // Check if sender has sufficient balance
+        if (senderAccount.account_amount < amount) {
+            // Record failed transaction
+            const failedTxId = generateTransactionId();
+            await TransactionModel.create({
+                transaction_id: failedTxId,
+                transaction_date: new Date(),
+                member_id: from.member_id,
+                account_number: from.account_no,
+                account_type: from.account_type,
+                transaction_type: "Transfer",
+                description: `Failed transfer to ${receiverMember.name} (${to.account_no}) - Insufficient balance`,
+                debit: amount,
+                credit: 0,
+                balance: senderAccount.account_amount,
+                Name: senderMember.name,
+                mobileno: senderMember.contactno,
+                status: "Failed"
+            });
+
+            return res.status(400).json({
+                success: false,
+                message: `Insufficient balance. Available: ₹${senderAccount.account_amount}, Required: ₹${amount}`
+            });
+        }
+
+        // Perform the transfer
+        // Deduct from sender
+        senderAccount.account_amount -= amount;
+        await senderAccount.save();
+
+        // Add to receiver
+        receiverAccount.account_amount += amount;
+        await receiverAccount.save();
+
+        // Create debit transaction for sender
+        const debitTxId = generateTransactionId();
+        const debitTransaction = await TransactionModel.create({
+            transaction_id: debitTxId,
+            transaction_date: new Date(),
+            member_id: from.member_id,
+            account_number: from.account_no,
+            account_type: from.account_type,
+            transaction_type: "Transfer",
+            description: `Transfer to ${receiverMember.name} (${to.account_no})`,
+            debit: amount,
+            credit: 0,
+            balance: senderAccount.account_amount,
+            Name: senderMember.name,
+            mobileno: senderMember.contactno,
+            status: "Completed"
+        });
+
+        // Create credit transaction for receiver
+        await TransactionModel.create({
+            transaction_id: generateTransactionId(),
+            transaction_date: new Date(),
+            member_id: to.member_id,
+            account_number: to.account_no,
+            account_type: to.account_type,
+            transaction_type: "Transfer",
+            description: `Transfer from ${senderMember.name} (${from.account_no})`,
+            credit: amount,
+            debit: 0,
+            balance: receiverAccount.account_amount,
+            Name: receiverMember.name,
+            mobileno: receiverMember.contactno,
+            status: "Completed",
+            reference_no: debitTxId
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Money transferred successfully",
+            data: {
+                transactionId: debitTxId,
+                from: {
+                    account_no: from.account_no,
+                    member_name: senderMember.name,
+                    new_balance: senderAccount.account_amount
+                },
+                to: {
+                    account_no: to.account_no,
+                    member_name: receiverMember.name,
+                    new_balance: receiverAccount.account_amount
+                },
+                amount: amount,
+                transfer_date: new Date()
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in money transfer:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to transfer money",
+            error: error.message
+        });
+    }
+};
