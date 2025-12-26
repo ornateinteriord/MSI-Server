@@ -84,7 +84,8 @@ const createAgent = async (req, res) => {
             }
 
             await UserModel.create({
-                user_id: newUserId,
+                id: newUserId,
+                user_id: newAgentId,
                 user_name: newAgentId,
                 reference_id: newAgentId,
                 password: mobile,
