@@ -101,7 +101,8 @@ const createMember = async (req, res) => {
             }
 
             await UserModel.create({
-                user_id: newUserId,
+                id: newUserId,
+                user_id: newMemberId,
                 user_name: newMemberId,
                 reference_id: newMemberId,
                 password: contactno,
