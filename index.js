@@ -48,7 +48,7 @@ app.options("*", cors());
 // ======================================================
 // ⚠️ IMPORTANT: RAW BODY FOR CASHFREE WEBHOOK
 // ======================================================
-app.use("/webhook/cashfree", express.raw({ type: "*/*" }));
+app.use("/transaction/webhook/cashfree", express.raw({ type: "*/*" }));
 
 // ======================================================
 //        📦 BODY PARSER (normal APIs)
