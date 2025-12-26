@@ -18,7 +18,10 @@ const getMyAccounts = async (req, res) => {
         const accounts = await AccountsModel.aggregate([
             {
                 $match: {
-                    member_id: memberId
+                    $or: [
+                        { member_id: memberId },           // String comparison
+                        { member_id: parseInt(memberId) }   // Number comparison
+                    ]
                 }
             },
             {
@@ -142,7 +145,131 @@ const updateMyProfile = async (req, res) => {
     }
 };
 
+// Get member basic info (for recipient lookup during transfer)
+const getMemberBasicInfo = async (req, res) => {
+    try {
+        const { memberId } = req.params;
+
+        const allMembers = await MemberModel.find({});
+        const member = allMembers.find(m => m.member_id === memberId);
+
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                message: "Member not found"
+            });
+        }
+
+        if (member.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Member account is not active"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Member info fetched successfully",
+            data: {
+                member_id: member.member_id,
+                name: member.name,
+                contact: member.contactno,
+                email: member.emailid
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching member info:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch member info",
+            error: error.message
+        });
+    }
+};
+
+// Get member's accounts (without balance - for recipient account selection)
+const getMemberAccountsPublic = async (req, res) => {
+    try {
+        const { memberId } = req.params;
+
+        // Verify member exists and is active
+        const allMembers = await MemberModel.find({});
+        const member = allMembers.find(m => m.member_id === memberId);
+
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                message: "Member not found"
+            });
+        }
+
+        if (member.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Member account is not active"
+            });
+        }
+
+        // Get accounts with account group names but WITHOUT balances
+        // Handle both string and number types for member_id
+        const accounts = await AccountsModel.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { member_id: memberId },           // String comparison
+                        { member_id: parseInt(memberId) }   // Number comparison
+                    ],
+                    status: "active"
+                }
+            },
+            {
+                $lookup: {
+                    from: "account_group_tbl",
+                    localField: "account_type",
+                    foreignField: "account_group_id",
+                    as: "groupInfo"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$groupInfo",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    account_id: 1,
+                    account_no: 1,
+                    account_type: 1,
+                    account_group_name: "$groupInfo.account_group_name",
+                    date_of_opening: 1
+                    // Explicitly NOT including account_amount for privacy
+                }
+            },
+            {
+                $sort: { date_of_opening: -1 }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            message: "Member accounts fetched successfully",
+            data: accounts
+        });
+    } catch (error) {
+        console.error("Error fetching member accounts:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch member accounts",
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getMyAccounts,
-    updateMyProfile
+    updateMyProfile,
+    getMemberBasicInfo,
+    getMemberAccountsPublic
 };

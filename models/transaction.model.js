@@ -23,12 +23,10 @@ const transactionSchema = new mongoose.Schema(
         },
         account_type: {
             type: String,
-            enum: ['Savings', 'RD', 'FD', 'Loan', 'Share', 'Wallet', 'Other'],
             default: 'Other',
         },
         transaction_type: {
             type: String,
-            enum: ['App Cash Transfer', 'Agent Withdraw', 'Member Withdraw', 'Transfer', 'Money Added'],
             required: true,
         },
         description: {
