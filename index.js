@@ -3,12 +3,13 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config()
 const ImageKit = require("imagekit");
-require("./models/db"); // Your Mongo DB connection file
+const connectDB = require("./models/db"); // Updated import
 
 // ====================== Routes ======================
 const AuthRoutes = require("./routes/AuthRoutes");
 const AdminRoutes = require("./routes/AdminRoute");
 const AgentRoutes = require("./routes/AgentRoute");
+const MemberRoutes = require("./routes/MemberRoute");
 
 const app = express();
 
@@ -88,6 +89,7 @@ app.get("/image-kit-auth", (_req, res) => {
 app.use("/auth", AuthRoutes);
 app.use("/admin", AdminRoutes);
 app.use("/agent", AgentRoutes);
+app.use("/member", MemberRoutes);
 // ======================================================
 //        🏠 HOME
 // ======================================================
@@ -96,9 +98,23 @@ app.get("/", (_req, res) => {
 });
 
 // ======================================================
-//        🚀 Start Server
+//        🚀 Start Server (with DB connection)
 // ======================================================
 const PORT = process.env.PORT || 5051;
-app.listen(PORT, () => {
-  console.log(`🌍 Server running on port http://localhost:${PORT}`);
-});
+
+// Connect to database before starting server
+const startServer = async () => {
+  try {
+    // Ensure MongoDB is connected before accepting requests
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`🌍 Server running on port http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
