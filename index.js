@@ -10,6 +10,7 @@ const AuthRoutes = require("./routes/AuthRoutes");
 const AdminRoutes = require("./routes/AdminRoute");
 const AgentRoutes = require("./routes/AgentRoute");
 const MemberRoutes = require("./routes/MemberRoute");
+const TransactionRoutes = require("./routes/TransactionRoute");
 
 const app = express();
 
@@ -90,6 +91,7 @@ app.use("/auth", AuthRoutes);
 app.use("/admin", AdminRoutes);
 app.use("/agent", AgentRoutes);
 app.use("/member", MemberRoutes);
+app.use("/transaction", TransactionRoutes);
 // ======================================================
 //        🏠 HOME
 // ======================================================
