@@ -218,6 +218,7 @@ const updateAgent = async (req, res) => {
 const getAgentById = async (req, res) => {
     try {
         const { agentId } = req.params;
+        console.log(agentId);
         const allAgents = await AgentModel.find({});
         const agent = allAgents.find(a => a.agent_id === agentId);
 
