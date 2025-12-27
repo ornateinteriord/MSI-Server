@@ -12,7 +12,7 @@ const router = require("express").Router();
 router.post('/create-member', Authenticated, authorizeRoles(["ADMIN"]), createMember)
 router.get('/get-members', Authenticated, authorizeRoles(["ADMIN"]), getMembers)
 router.put('/update-member/:memberId', Authenticated, authorizeRoles(["ADMIN"]), updateMember)
-router.get('/get-member/:memberId', Authenticated, authorizeRoles(["ADMIN"]), getMemberById)
+router.get('/get-member/:memberId', Authenticated, authorizeRoles(["ADMIN", 'AGENT']), getMemberById)
 
 // Agent routes
 router.post('/create-agent', Authenticated, authorizeRoles(["ADMIN"]), createAgent)
@@ -27,13 +27,13 @@ router.put('/update-interest/:interestId', Authenticated, authorizeRoles(["ADMIN
 router.get('/get-interest/:interestId', Authenticated, authorizeRoles(["ADMIN"]), getInterestById)
 
 // Account routes
-router.get('/get-interests-by-account-group/:account_group_id', Authenticated, authorizeRoles(["ADMIN"]), getInterestsByAccountGroup)
+router.get('/get-interests-by-account-group/:account_group_id', Authenticated, authorizeRoles(["ADMIN", "AGENT"]), getInterestsByAccountGroup)
 router.post('/create-account', Authenticated, authorizeRoles(["ADMIN"]), createAccount)
 router.get('/get-accounts', Authenticated, authorizeRoles(["ADMIN"]), getAccounts)
 router.get('/get-account/:accountId', Authenticated, authorizeRoles(["ADMIN"]), getAccountById)
 router.put('/update-account/:accountId', Authenticated, authorizeRoles(["ADMIN"]), updateAccount)
-router.get('/get-account-books', Authenticated, authorizeRoles(["ADMIN"]), getAccountBooks)
-router.get('/get-account-groups', Authenticated, authorizeRoles(["ADMIN"]), getAccountGroups)
+router.get('/get-account-books', Authenticated, authorizeRoles(["ADMIN", "AGENT"]), getAccountBooks)
+router.get('/get-account-groups', Authenticated, authorizeRoles(["ADMIN", "AGENT"]), getAccountGroups)
 
 // Dashboard routes
 router.get('/get-dashboard-counts', Authenticated, authorizeRoles(["ADMIN"]), getDashboardCounts)

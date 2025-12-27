@@ -69,6 +69,10 @@ const transactionSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        collected_by: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true, collection: "transaction_tbl" }
 );
