@@ -46,7 +46,9 @@ const getMyAccounts = async (req, res) => {
                     accounts: {
                         $push: {
                             account_id: "$account_id",
+                            member_id: "$member_id",
                             account_no: "$account_no",
+                            account_type: "$account_type",
                             account_amount: "$account_amount",
                             status: "$status",
                             date_of_opening: "$date_of_opening"

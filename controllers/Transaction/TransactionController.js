@@ -477,3 +477,145 @@ exports.transferMoney = async (req, res) => {
         });
     }
 };
+
+// ==========================================
+// Withdraw Request
+// ==========================================
+
+// Request money withdrawal
+exports.requestWithdraw = async (req, res) => {
+    const AccountsModel = require("../../models/accounts.model");
+    const MemberModel = require("../../models/member.model");
+    const WithdrawRequestModel = require("../../models/withdrawRequest.model");
+
+    try {
+        const {
+            member_id,
+            account_id,
+            account_no,
+            account_type,
+            amount,
+            bank_account_number,
+            ifsc_code,
+            account_holder_name
+        } = req.body;
+
+        // Validate input
+        if (!member_id || !account_id || !account_no || !account_type || !amount) {
+            return res.status(400).json({
+                success: false,
+                message: "Member ID, account details, and amount are required"
+            });
+        }
+
+        if (!bank_account_number || !ifsc_code || !account_holder_name) {
+            return res.status(400).json({
+                success: false,
+                message: "Bank account details (account number, IFSC code, account holder name) are required"
+            });
+        }
+
+        if (amount <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Withdrawal amount must be greater than zero"
+            });
+        }
+
+        // Validate member exists and is active
+        const allMembers = await MemberModel.find({});
+        const member = allMembers.find(m => m.member_id === member_id || m.member_id === parseInt(member_id));
+
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                message: "Member not found"
+            });
+        }
+
+        if (member.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Member account is not active. Cannot process withdrawal request."
+            });
+        }
+
+        // Find and validate account
+        const allAccounts = await AccountsModel.find({});
+        const account = allAccounts.find(acc =>
+            (acc.account_id === account_id || acc.account_id === parseInt(account_id)) &&
+            (acc.member_id === member_id || acc.member_id === parseInt(member_id)) &&
+            (acc.account_no == account_no) &&
+            (acc.account_type === account_type)
+        );
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message: "Account not found or does not belong to this member"
+            });
+        }
+
+        // Check if account is active
+        if (account.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Account is not active. Cannot process withdrawal request."
+            });
+        }
+
+        // Check if account has sufficient balance
+        if (account.account_amount < amount) {
+            return res.status(400).json({
+                success: false,
+                message: `Insufficient balance. Available: ₹${account.account_amount}, Required: ₹${amount}`
+            });
+        }
+
+        // Generate unique withdraw request ID
+        const withdrawRequestId = `WR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        // Create withdraw request
+        const withdrawRequest = new WithdrawRequestModel({
+            withdraw_request_id: withdrawRequestId,
+            member_id: member_id,
+            account_id: account_id,
+            account_no: account_no,
+            account_type: account_type,
+            amount: amount,
+            bank_account_number: bank_account_number,
+            ifsc_code: ifsc_code.toUpperCase(),
+            account_holder_name: account_holder_name,
+            status: "Pending",
+            requested_date: new Date()
+        });
+
+        await withdrawRequest.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "Withdrawal request submitted successfully. It will be processed within 2-3 business days.",
+            data: {
+                withdraw_request_id: withdrawRequestId,
+                member_name: member.name,
+                account_no: account_no,
+                account_type: account_type,
+                amount: amount,
+                bank_account_number: bank_account_number,
+                ifsc_code: ifsc_code.toUpperCase(),
+                account_holder_name: account_holder_name,
+                status: "Pending",
+                requested_date: withdrawRequest.requested_date
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in withdraw request:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to process withdrawal request",
+            error: error.message
+        });
+    }
+};
+
