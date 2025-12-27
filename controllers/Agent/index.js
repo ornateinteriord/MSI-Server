@@ -162,7 +162,42 @@ const collectPayment = async (req, res) => {
     }
 };
 
+// Get all collection transactions for an agent
+const getCollectionTransactions = async (req, res) => {
+    try {
+        const { agentId } = req.params;
+
+        if (!agentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Agent ID is required"
+            });
+        }
+
+        // Find all transactions collected by this agent
+        const transactions = await TransactionModel.find({
+            collected_by: agentId
+        })
+            .sort({ createdAt: -1 })
+            .select('transaction_id transaction_date account_number Name credit balance status description');
+
+        res.status(200).json({
+            success: true,
+            message: "Collection transactions fetched successfully",
+            data: transactions
+        });
+    } catch (error) {
+        console.error("Error fetching collection transactions:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch collection transactions",
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getAssignedAccounts,
-    collectPayment
+    collectPayment,
+    getCollectionTransactions
 };
