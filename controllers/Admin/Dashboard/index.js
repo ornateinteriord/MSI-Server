@@ -1,6 +1,7 @@
 const MemberModel = require("../../../models/member.model");
 const AccountsModel = require("../../../models/accounts.model");
 const AgentModel = require("../../../models/agent.model");
+const CashTransactionModel = require("../../../models/cashTransaction.model");
 
 // Get dashboard counts
 const getDashboardCounts = async (req, res) => {
@@ -13,6 +14,26 @@ const getDashboardCounts = async (req, res) => {
 
         // Get total accounts count
         const totalAccounts = await AccountsModel.countDocuments();
+
+        // Get cash transactions and calculate closing balance
+        const allTransactions = await CashTransactionModel.find({ status: { $ne: 'inactive' } }).sort({ transaction_date: 1, createdAt: 1 });
+
+        let runningBalance = 0;
+        let totalDebit = 0;
+        let totalCredit = 0;
+
+        allTransactions.forEach((transaction) => {
+            const debit = transaction.debit || 0;
+            const credit = transaction.credit || 0;
+
+            totalDebit += debit;
+            totalCredit += credit;
+
+            // Credit increases balance, debit decreases balance
+            runningBalance += credit - debit;
+        });
+
+        const closingBalance = runningBalance;
 
         // Get accounts grouped by account_type (account_group_id) with account_group_name
         const accountsByType = await AccountsModel.aggregate([
@@ -56,6 +77,9 @@ const getDashboardCounts = async (req, res) => {
                 totalMembers,
                 totalAccounts,
                 totalAgents,
+                closingBalance,
+                totalDebit,
+                totalCredit,
                 accountsByType
             }
         });
