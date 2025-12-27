@@ -130,7 +130,7 @@ exports.createPaymentOrder = async (req, res) => {
                 customer_email: email || "customer@example.com"
             },
             order_meta: {
-                return_url: `${process.env.FRONTEND_URL}?order_id=${orderId}`
+                return_url: `${process.env.FRONTEND_URL}/user/wallet?order_id=${orderId}`
             }
         };
 
